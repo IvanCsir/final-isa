@@ -12,6 +12,13 @@ import org.junit.jupiter.api.Test;
 
 class PostTest {
 
+    // //Test de unidad
+    // private Post post;
+    // @BeforeEach
+    // public void init {
+
+    // }
+
     @Test
     void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Post.class);
