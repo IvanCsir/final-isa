@@ -18,6 +18,8 @@ logging:
     ROOT: INFO
     tech.jhipster: INFO
     com.jhipster.demo.blog: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 management:
   prometheus:
