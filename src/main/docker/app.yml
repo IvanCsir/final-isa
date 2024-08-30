@@ -1,5 +1,35 @@
-# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
-name: blog
+## This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+#name: blog
+#services:
+#  app:
+#    image: blog
+#    environment:
+#      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+#      - SPRING_PROFILES_ACTIVE=prod,api-docs
+#      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/blog
+#      - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:5432/blog
+#    ports:
+#      - 127.0.0.1:8080:8080
+#    healthcheck:
+#      test:
+#        - CMD
+#        - curl
+#        - -f
+#        - http://localhost:8080/management/health
+#      interval: 5s
+#      timeout: 5s
+#      retries: 40
+#    depends_on:
+#      postgresql:
+#        condition: service_healthy
+#  postgresql:
+#    extends:
+#      file: ./postgresql.yml
+#      service: postgresql
+
+version: '3.8'
+
 services:
   app:
     image: blog
@@ -9,21 +39,29 @@ services:
       - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/blog
       - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:5432/blog
+      - SPRING_DATASOURCE_USERNAME=postgres # Nombre de usuario para conectarse a la base de datos
+      - SPRING_DATASOURCE_PASSWORD=admin # Contraseña para conectarse a la base de datos
     ports:
       - 127.0.0.1:8080:8080
     healthcheck:
-      test:
-        - CMD
-        - curl
-        - -f
-        - http://localhost:8080/management/health
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/management/health']
       interval: 5s
       timeout: 5s
       retries: 40
     depends_on:
       postgresql:
         condition: service_healthy
+
   postgresql:
-    extends:
-      file: ./postgresql.yml
-      service: postgresql
+    image: postgres:13
+    environment:
+      POSTGRES_DB: blog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
