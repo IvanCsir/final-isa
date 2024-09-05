@@ -1,0 +1,108 @@
+services:
+  #  app:
+  #    image: blog
+  #    environment:
+  #      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+  #      - SPRING_PROFILES_ACTIVE=prod,api-docs
+  #      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+  #      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/blog
+  #      - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:5432/blog
+  #      - SPRING_DATASOURCE_USERNAME=postgres # Nombre de usuario para conectarse a la base de datos
+  #      - SPRING_DATASOURCE_PASSWORD=admin # Contraseña para conectarse a la base de datos
+  #    ports:
+  #      - 127.0.0.1:8080:8080
+  #
+  ##    volumes:
+  ##      - ./src/main/resources/logback-spring.xml:/app/resources/logback-spring.xml
+  ##    volumes:
+  ##      - ./src/main/resources/logback-spring.xml:/app/resources/logback-spring.xml
+  #
+  #    healthcheck:
+  #      test: [ 'CMD', 'curl', '-f', 'http://localhost:8080/management/health' ]
+  #      interval: 5s
+  #      timeout: 5s
+  #      retries: 40
+  #    depends_on:
+  #      postgresql:
+  #        condition: service_healthy
+  #    networks:
+  #      - elk
+  #
+  #  postgresql:
+  #    image: postgres:13
+  #    environment:
+  #      POSTGRES_DB: blog
+  #      POSTGRES_USER: postgres
+  #      POSTGRES_PASSWORD: admin
+  #    ports:
+  #      - 5433:5432
+  #    healthcheck:
+  #      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+  #      interval: 5s
+  #      timeout: 5s
+  #      retries: 5
+  #    networks:
+  #      - elk
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+    environment:
+      - xpack.security.enabled=false # Desactiva la seguridad en Elasticsearch (no recomendado para producción)
+      - node.name=elasticsearch
+      - cluster.name=elasticsearch-cluster
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=admin # Cambia esto a una contraseña segura
+    ports:
+      - 9200:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.5.3
+    ports:
+      - 5044:5044
+    #    volumes:
+    #      - ./logstash.conf:/usr/share/logstash/config/logstash.conf
+    #    volumes:
+    #      -./logstash.conf:/home/ivan/Escritorio/Facultad/final-isa/src/main/docker/logstash.conf
+
+    volumes:
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+    #    configs:
+    #      - source: logstash_config
+    #        target: /usr/share/logstash/config/logstash.yml
+    #      - source: logstash_pipeline
+    #        target: /usr/share/logstash/pipeline/logstash.conf
+
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+    command: sh -c "sleep 30 && /usr/share/logstash/bin/logstash"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.3
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_PASSWORD=admin # La misma contraseña que configuraste para Elasticsearch
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+#configs:
+#  logstash_config:
+#    file: ./logstash/config/logstash.yml
+#  logstash_pipeline:
+#    file: ./logstash/pipeline/logstash.conf
+
+networks:
+  elk:
+    driver: bridge
