@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+        agent {
+            docker {
+                image 'jenkins/agent:jdk17' // Usa una imagen de Jenkins con Docker preinstalado
+                args '-v /var/run/docker.sock:/var/run/docker.sock'
+            }
+        }
 
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-login'
