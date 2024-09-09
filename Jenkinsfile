@@ -1,54 +1,61 @@
-pipeline {
-        agent {
-            docker {
-                image 'jenkins/agent:jdk17' // Usa una imagen de Jenkins con Docker preinstalado
-                args '-v /var/run/docker.sock:/var/run/docker.sock'
-            }
-        }
-
-    environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-login'
-        DOCKERHUB_REPO = 'ivancsir/dockerhub:ulitima'
+node {
+    stage('checkout') {
+        checkout scm
     }
 
-    stages {
-        stage('Checkout SCM') {
-            steps {
-                script {
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/ivancsir/final-isa.git', credentialsId: 'dockerhub-login']]])
-                }
-            }
-        }
-        stage('Build Application') {
-            steps {
-                script {
-                    // Comando para construir la aplicación
-                    sh './mvnw clean package -DskipTests'
-                }
-            }
-        }
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Revisa si el Dockerfile está en el directorio correcto.
-                    sh 'ls -al'
+    stage('check java') {
+        sh "java -version"
+    }
 
-                    // Construye la imagen Docker.
-                    sh "docker build -t $DOCKERHUB_REPO -f .devcontainer/Dockerfile ."
-                }
-            }
+    stage('clean') {
+        sh "chmod +x mvnw"
+        sh "./mvnw -ntp clean -P-webapp"
+    }
+    stage('nohttp') {
+        sh "./mvnw -ntp checkstyle:check"
+    }
+
+    stage('install tools') {
+        sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm"
+    }
+
+    stage('npm install') {
+        sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm"
+    }
+/*
+    stage('backend tests') {
+        try {
+            sh "./mvnw -ntp verify -P-webapp"
+        } catch(err) {
+            throw err
+        } finally {
+            junit '**//*
+target/surefire-reports/TEST-*.xml,**//*
+target/failsafe-reports/TEST-*.xml'
         }
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    // Log in to Docker Hub
-                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                    }
-                    // Push the image
-                    sh "docker push $DOCKERHUB_REPO"
-                }
-            }
+    }
+
+    stage('frontend tests') {
+        try {
+            sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm -Dfrontend.npm.arguments='run test'"
+        } catch(err) {
+            throw err
+        } finally {
+            junit '**//*
+target/test-results/TESTS-results-jest.xml'
         }
+    }
+ */
+
+    stage('packaging') {
+        sh "./mvnw -ntp verify -P-webapp -Pprod -DskipTests"
+        archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+    }
+    def dockerImage
+    stage('publish docker') {
+    withCredentials([usernamePassword(credentialsId: 'dockerhub-login', passwordVariable:
+    'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]) {
+     sh "./mvnw -ntp jib:build"
+     }
     }
 }
