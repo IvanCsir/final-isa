@@ -57,6 +57,4 @@ target/test-results/TESTS-results-jest.xml'
             sh "./mvnw -ntp jib:build -Djib.to.auth.username=$DOCKER_REGISTRY_USER -Djib.to.auth.password=$DOCKER_REGISTRY_PWD"
         }
     }
-
-    }
 }
