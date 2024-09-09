@@ -1,58 +1,47 @@
 #!/usr/bin/env groovy
 
-node {
-    stage('checkout') {
-        checkout scm
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS = 'dockerhub-login'
+        DOCKERHUB_REPO = 'ivancsir/dockerhub:ulitima'
     }
 
-    stage('check java') {
-        sh "java -version"
-    }
-
-    stage('clean') {
-        sh "chmod +x mvnw"
-        sh "./mvnw -ntp clean -P-webapp"
-    }
-    stage('nohttp') {
-        sh "./mvnw -ntp checkstyle:check"
-    }
-
-    stage('install tools') {
-        sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:install-node-and-npm@install-node-and-npm"
-    }
-
-    stage('npm install') {
-        sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm"
-    }
-    stage('backend tests') {
-        try {
-            sh "./mvnw -ntp verify -P-webapp"
-        } catch(err) {
-            throw err
-        } finally {
-            junit '**/target/surefire-reports/TEST-*.xml,**/target/failsafe-reports/TEST-*.xml'
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/ivancsir/final-isa.git', credentialsId: 'dockerhub-login']]])
+                }
+            }
         }
-    }
-
-    stage('frontend tests') {
-        try {
-            sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm -Dfrontend.npm.arguments='run test'"
-        } catch(err) {
-            throw err
-        } finally {
-            junit '**/target/test-results/TESTS-results-jest.xml'
+        stage('Build Application') {
+            steps {
+                script {
+                    // Comando para construir la aplicación
+                    sh './mvnw clean package -DskipTests'
+                }
+            }
         }
-    }
-
-    stage('packaging') {
-        sh "./mvnw -ntp verify -P-webapp -Pprod -DskipTests"
-        archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
-    }
-    def dockerImage
-    stage('publish docker') {
-    withCredentials([usernamePassword(credentialsId: 'dockerhub-login', passwordVariable:
-    'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]) {
-     sh "./mvnw -ntp jib:build"
-     }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def dockerrImage = docker.build("$DOCKERHUB_REPO")
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Log in to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    }
+                    // Push the image
+                    sh 'sudo docker push ivancsir/dockerhub:ulitima'
+                }
+            }
+        }
     }
 }
