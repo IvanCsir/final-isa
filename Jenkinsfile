@@ -29,7 +29,7 @@ pipeline {
                     sh 'ls -al'
 
                     // Construye la imagen Docker.
-                    sh "docker build -t $DOCKERHUB_REPO ."
+                    sh "docker build -t $DOCKERHUB_REPO -f .devcontainer/Dockerfile ."
                 }
             }
         }
