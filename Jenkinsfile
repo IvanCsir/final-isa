@@ -27,7 +27,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerrImage = docker.build("$DOCKERHUB_REPO")
+                    // Construye la imagen Docker
+                    dockerImage = docker.build("$DOCKERHUB_REPO")
                 }
             }
         }
@@ -39,9 +40,16 @@ pipeline {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
                     // Push the image
-                    sh 'sudo docker push ivancsir/dockerhub:ulitima'
+                    dockerImage.push()
                 }
             }
         }
     }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
 }
+
