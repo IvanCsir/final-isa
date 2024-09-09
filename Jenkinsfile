@@ -1,5 +1,3 @@
-#!/usr/bin/env groovy
-
 pipeline {
     agent any
 
@@ -27,8 +25,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Construye la imagen Docker
-                    dockerImage = docker.build("$DOCKERHUB_REPO")
+                    // Revisa si el Dockerfile está en el directorio correcto.
+                    sh 'ls -al'
+
+                    // Construye la imagen Docker.
+                    sh "docker build -t $DOCKERHUB_REPO ."
                 }
             }
         }
@@ -40,16 +41,9 @@ pipeline {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
                     // Push the image
-                    dockerImage.push()
+                    sh "docker push $DOCKERHUB_REPO"
                 }
             }
         }
     }
-
-    post {
-        always {
-            cleanWs()
-        }
-    }
 }
-
