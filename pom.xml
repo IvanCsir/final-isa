@@ -421,7 +421,7 @@
 <!--                            <image>blog:latest</image>-->
 <!--                        </to>-->
                         <to>
-                            <image>${DOCKER_REGISTRY_USER}/blog-jenkins:latest</image>
+                            <image>${DOCKER_REGISTRY_USER}/dockerhub:latest</image>
                             <tags>
                                 <tag>${project.version}</tag>
                                 <tag>latest</tag>
