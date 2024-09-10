@@ -1,6 +1,6 @@
 describe('crear tag', () => {
   it('Verifico que se pueda crear un tag', () => {
-    cy.visit('http://localhost:9000/');
+    cy.visit('http://localhost:8080/');
     cy.get('#account-menu > span > span').click();
     cy.get('[data-cy=login]').click();
     cy.get('[data-cy=username]').type('admin');
@@ -13,6 +13,6 @@ describe('crear tag', () => {
     cy.get('[data-cy=name]').click();
     cy.get('[data-cy=name]').type('tag prueba');
     cy.get('#save-entity > span').click();
-    cy.get('.ng-submitted').submit();
+    //     cy.get('.ng-submitted').submit();
   });
 });

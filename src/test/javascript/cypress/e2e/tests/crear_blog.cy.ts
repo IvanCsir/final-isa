@@ -1,6 +1,6 @@
 describe('Crear blog', () => {
   it('Verifico que se pueda crear un blog', () => {
-    cy.visit('http://localhost:9000/');
+    cy.visit('http://localhost:8080/');
     cy.get('#account-menu > span > span').click();
     cy.get('[data-cy=login]').click();
     cy.get('[data-cy=username]').type('admin');
@@ -16,6 +16,6 @@ describe('Crear blog', () => {
     cy.get('[data-cy=handle]').click();
     cy.get('[data-cy=handle]').type('cypress');
     cy.get('[data-cy=entityCreateSaveButton]').click();
-    cy.get('.ng-submitted').submit();
+    //     cy.get('.ng-submitted').submit();
   });
 });

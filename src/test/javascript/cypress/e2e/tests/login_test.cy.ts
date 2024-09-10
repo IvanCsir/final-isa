@@ -1,6 +1,6 @@
 describe('Admin login', () => {
   it('Verifico que se pueda hacer el login del admin', () => {
-    cy.visit('http://localhost:9000/');
+    cy.visit('http://localhost:8080/');
     cy.get('#account-menu > span > span').click();
     cy.get('#login > span').click();
     cy.get('[data-cy=username]').click();
