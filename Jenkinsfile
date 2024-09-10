@@ -22,7 +22,7 @@ node {
     stage('npm install') {
         sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm"
     }
-/*
+
     stage('backend tests') {
         try {
             sh "./mvnw -ntp verify -P-webapp"
@@ -30,8 +30,8 @@ node {
             throw err
         } finally {
             junit '**//*
-target/surefire-reports/TEST-*.xml,**//*
-target/failsafe-reports/TEST-*.xml'
+            target/surefire-reports/TEST-*.xml,**//*
+            target/failsafe-reports/TEST-*.xml'
         }
     }
 
@@ -42,10 +42,10 @@ target/failsafe-reports/TEST-*.xml'
             throw err
         } finally {
             junit '**//*
-target/test-results/TESTS-results-jest.xml'
+            target/test-results/TESTS-results-jest.xml'
         }
     }
- */
+
 
     stage('packaging') {
         sh "./mvnw -ntp verify -P-webapp -Pprod -DskipTests"
