@@ -42,8 +42,6 @@ node {
             junit '**/target/test-results/TESTS-results-jest.xml'
         }
     }
-
-
     stage('packaging') {
         sh "./mvnw -ntp verify -P-webapp -Pprod -DskipTests"
         archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
@@ -54,4 +52,5 @@ node {
             sh "./mvnw -e -X jib:build -Djib.to.auth.username=${env.DOCKER_REGISTRY_USER} -Djib.to.auth.password=${env.DOCKER_REGISTRY_PWD}"
         }
     }
+
 }
