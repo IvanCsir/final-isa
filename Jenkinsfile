@@ -54,7 +54,7 @@ target/test-results/TESTS-results-jest.xml'
     def dockerImage
     stage('publish docker') {
         withCredentials([usernamePassword(credentialsId: 'dockerhub-login', passwordVariable: 'DOCKER_REGISTRY_PWD', usernameVariable: 'DOCKER_REGISTRY_USER')]) {
-            sh "./mvnw -ntp jib:build -Djib.to.auth.username=$DOCKER_REGISTRY_USER -Djib.to.auth.password=$DOCKER_REGISTRY_PWD"
+            sh "./mvnw -e -X jib:build -Djib.to.auth.username=${env.DOCKER_REGISTRY_USER} -Djib.to.auth.password=${env.DOCKER_REGISTRY_PWD}"
         }
     }
 }
